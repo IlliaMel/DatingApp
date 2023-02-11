@@ -1,18 +1,16 @@
 package com.example.datingapp
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -20,11 +18,9 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.BlurredEdgeTreatment
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ExperimentalGraphicsApi
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -41,6 +37,7 @@ import com.example.datingapp.Swipeable.rememberSwipeableCardState
 import com.example.datingapp.Swipeable.swipableCard
 import com.example.datingapp.ui.theme.*
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import kotlinx.coroutines.launch
 
 
 class MainActivity : ComponentActivity() {
@@ -69,14 +66,11 @@ class MainActivity : ComponentActivity() {
                     color = Color.Transparent
                 )
 
+
                 when(selectedTabIndex.value){
                     0 -> MainScreen(selectedTabIndex)
                     1 -> ComingSoon()
                     2 -> ComingSoon()
-                    3 -> ComingSoon()
-                    4 -> ComingSoon()
-                    5 -> ComingSoon()
-                    6 -> ComingSoon()
                 }
 
 
@@ -93,15 +87,25 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen(selectedTabIndex: MutableState<Int>) {
+
+    var swipeDirection = remember {
+        mutableStateOf(0)
+    }
+
     Column(modifier = Modifier
         .fillMaxSize()
         .padding(15.dp, 55.dp, 15.dp, 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top) {
-        TopAppBar(onSearchIconClick = { selectedTabIndex.value = 5} , onMoreInfoIconClick = { selectedTabIndex.value = 6 })
-        MainInfo()
-        BottomInfo(onCancelPersonClick = {selectedTabIndex.value = 1} , onLikePersonClick = {selectedTabIndex.value = 2} , onChatPersonClick = {selectedTabIndex.value = 3}, onLightingPersonClick = {selectedTabIndex.value = 4})
-
+        verticalArrangement = Arrangement.SpaceBetween) {
+        TopAppBar(onSearchIconClick = { } , onMoreInfoIconClick = { })
+        MainInfo(swipeDirection)
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp),
+            verticalArrangement = Arrangement.Top) {
+            BottomInfo(onCancelPersonClick = {swipeDirection.value = 1} , onLikePersonClick = {swipeDirection.value = 2})
+        }
+        BottomAppBar( onChatPersonClick = {selectedTabIndex.value = 1}, onClosePersonClick = {selectedTabIndex.value = 2})
     }
 }//stringResource(R.string.logo)
 
@@ -144,108 +148,171 @@ fun TopAppBar(modifier: Modifier = Modifier,onSearchIconClick : () -> Unit , onM
 
 
 @Composable
-fun BottomInfo(onCancelPersonClick : () -> Unit, onLikePersonClick : () -> Unit , onLightingPersonClick : () -> Unit , onChatPersonClick : () -> Unit){
+fun BottomInfo(onCancelPersonClick : () -> Unit, onLikePersonClick : () -> Unit ){
     Row(modifier = Modifier
         .fillMaxWidth()
         .height(120.dp),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically) {
 
-        Box(modifier = Modifier
-            .shadow(color = CancelButtonMainColor,
-                borderRadius = 50.dp,
-                blurRadius = 12.dp,
-                offsetY = 0.dp,
-                offsetX = 0.dp,
-                spread = 0.5f.dp,)
-            .padding(0.dp)
-            .clip(RoundedCornerShape(50.dp))
-            .background(CancelButtonMainColor)
-            .size(70.dp),
-            contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.size(70.dp).weight(1f))
+
+        Box(
+            modifier = Modifier
+                .shadow(
+                    color = CancelButtonMainColor,
+                    borderRadius = 50.dp,
+                    blurRadius = 12.dp,
+                    offsetY = 0.dp,
+                    offsetX = 0.dp,
+                    spread = 0.5f.dp,
+                )
+                .padding(0.dp)
+                .weight(1f)
+                .clip(RoundedCornerShape(50.dp))
+                .background(CancelButtonMainColor)
+                .size(70.dp)
+                .clickable { onCancelPersonClick() },
+            contentAlignment = Alignment.Center
+        ) {
 
             Icon(
-                modifier = Modifier.size(42.dp).clickable{onCancelPersonClick()},
+                modifier = Modifier
+                    .size(42.dp),
                 imageVector = Icons.Default.Close,
                 tint = Color.White,
                 contentDescription = ""
             )
         }
 
-        Box(modifier = Modifier
-            .shadow(color = LikeButtonMainColor,
-                borderRadius = 50.dp,
-                blurRadius = 12.dp,
-                offsetY = 0.dp,
-                offsetX = 0.dp,
-                spread = 0.5f.dp,)
-            .padding(0.dp)
-            .clip(RoundedCornerShape(50.dp))
-            .background(LikeButtonMainColor)
-            .size(70.dp),
-            contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.size(70.dp).weight(1f))
+
+        Box(
+            modifier = Modifier
+                .shadow(
+                    color = LikeButtonMainColor,
+                    borderRadius = 50.dp,
+                    blurRadius = 12.dp,
+                    offsetY = 0.dp,
+                    offsetX = 0.dp,
+                    spread = 0.5f.dp,
+                )
+                .weight(1f)
+                .padding(0.dp)
+                .clip(RoundedCornerShape(50.dp))
+                .background(LikeButtonMainColor)
+                .size(70.dp)
+                .clickable { onLikePersonClick() },
+            contentAlignment = Alignment.Center
+        ) {
 
             Icon(
-                modifier = Modifier.size(42.dp).clickable{onLikePersonClick()},
+                modifier = Modifier
+                    .size(42.dp),
                 imageVector = Icons.Default.Favorite,
                 tint = Color.White,
                 contentDescription = ""
             )
         }
 
+        Box(modifier = Modifier.size(70.dp).weight(1f))
+
+    }
+}
+
+@Composable
+fun BottomAppBar(onClosePersonClick : () -> Unit , onChatPersonClick : () -> Unit){
+    Row(modifier = Modifier
+        .fillMaxWidth()
+        .height(50.dp)
+        .clip(RoundedCornerShape(25.dp)),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically) {
+
         Box(modifier = Modifier
-            .shadow(color = LightningButtonMainColor,
-                borderRadius = 50.dp,
-                blurRadius = 12.dp,
+            .shadow(
+                color = ChatButtonMainColor,
+                borderRadius = 15.dp,
+                blurRadius = 6.dp,
                 offsetY = 0.dp,
                 offsetX = 0.dp,
-                spread = 0.5f.dp)
-            .padding(0.dp)
-            .clip(RoundedCornerShape(50.dp))
-            .background(LightningButtonMainColor)
-            .size(70.dp),
-            contentAlignment = Alignment.Center) {
-
-            Icon(
-                modifier = Modifier.size(52.dp).clickable{onLightingPersonClick()},
-                imageVector = ImageVector.vectorResource(id = R.drawable.baseline_bolt_24),
-                tint = Color.White,
-                contentDescription = ""
+                spread = 0.2f.dp,
             )
-        }
-
-        Box(modifier = Modifier
-            .shadow(color = ChatButtonMainColor,
-                borderRadius = 50.dp,
-                blurRadius = 12.dp,
-                offsetY = 0.dp,
-                offsetX = 0.dp,
-                spread = 0.5f.dp,)
             .padding(0.dp)
-            .clip(RoundedCornerShape(50.dp))
+            .clip(RoundedCornerShape(15.dp))
             .background(ChatButtonMainColor)
-            .size(70.dp),
+            .height(35.dp)
+            .width(70.dp)
+            .clickable { onClosePersonClick ()},
             contentAlignment = Alignment.Center) {
-
             Icon(
-                modifier = Modifier.size(42.dp).clickable{onChatPersonClick()},
+                modifier = Modifier
+                    .size(25.dp)
+                    ,
                 imageVector = ImageVector.vectorResource(id = R.drawable.chat),
                 tint = Color.White,
                 contentDescription = ""
             )
         }
 
-    }
 
+        Box(modifier = Modifier
+            .shadow(
+                color = CloseButtonMainColor,
+                borderRadius = 15.dp,
+                blurRadius = 6.dp,
+                offsetY = 0.dp,
+                offsetX = 0.dp,
+                spread = 0.2f.dp,
+            )
+            .padding(0.dp)
+            .clip(RoundedCornerShape(15.dp))
+            .background(CloseButtonMainColor)
+            .height(35.dp)
+            .width(70.dp)
+            .clickable { onChatPersonClick ()},
+            contentAlignment = Alignment.Center) {
+            Icon(
+                modifier = Modifier
+                    .size(28.dp),
+                imageVector = Icons.Default.Close,
+                tint = Color.White,
+                contentDescription = ""
+            )
+        }
+
+
+    }
 }
 
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun MainInfo(){
-    val state = rememberSwipeableCardState()
+fun MainInfo(swipeDirection: MutableState<Int>) {
+
+    val scope = rememberCoroutineScope()
 
     val states = profiles
         .map { it to rememberSwipeableCardState() }
+
+    when (swipeDirection.value){
+        1-> scope.launch {
+            val last = states.reversed()
+                .firstOrNull {
+                    it.second.offset.value == Offset(0f, 0f)
+                }?.second
+            swipeDirection.value = 0
+            last?.swipe(Direction.Left)
+        }
+        2-> scope.launch {
+            val last = states.reversed()
+                .firstOrNull {
+                    it.second.offset.value == Offset(0f, 0f)
+                }?.second
+            swipeDirection.value = 0
+            last?.swipe(Direction.Right)
+        }
+    }
 
     Card(
         modifier = Modifier

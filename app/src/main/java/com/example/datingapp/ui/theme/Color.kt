@@ -12,5 +12,5 @@ val BackgroundMainColor = Color(0xFFFF6E90)
 
 val CancelButtonMainColor = Color(0xFFD7DEE6)
 val LikeButtonMainColor = Color(0xFFFE6A8C)
-val LightningButtonMainColor = Color(0xFF75EAC5)
+val CloseButtonMainColor = Color(0xFF75EAC5)
 val ChatButtonMainColor = Color(0xFF6BB2FE)
